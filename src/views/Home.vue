@@ -33,9 +33,6 @@ export default {
     height: 100%;
     border-radius: 5px;
     background-color: #171f2b;
-    // display: flex;
-    // align-items: flex-start;
-    // flex-wrap: wrap;
     .texts {
       color: #b8c2cc;
     }
