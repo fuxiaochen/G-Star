@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <router-link to="/login">Lbout</router-link>
     <router-view />
   </div>
 </template>
