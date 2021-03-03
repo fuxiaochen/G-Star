@@ -6,13 +6,12 @@
         <el-col :span="12" style="width:100%; text-align: left">
           <el-menu
             default-active="2"
-            class="el-menu-vertical-demo"
             @open="handleOpen"
             @close="handleClose"
+            class="el-menu-vertical-demo"
             background-color="#171f2b"
             text-color="#fff"
-            active-text-color="#ffd04b"
-          >
+            active-text-color="#ffd04b">
             <el-menu-item index="1">
               <template slot="title">
                 <i class="el-icon-receiving"></i>
@@ -84,7 +83,7 @@
           <div class="right-content">
             <div class="header">
               <span>卡片名称</span>
-              <el-button style="float: right; padding: 3px 0" type="text">操作按钮</el-button>
+              <el-button style="float: right; padding: 3px 0" type="text" @click="ma()">操作按钮</el-button>
             </div>
             <div class="body">
               <div v-for ="i in 50" :key="i">卡片名称</div>
@@ -104,6 +103,42 @@ export default {
       input1: '',
       input2: ''
     }
+  },
+  methods: {
+    handleOpen(key, keyPath) {
+      console.log(key, keyPath);
+    },
+    handleClose(key, keyPath) {
+      console.log(key, keyPath);
+    },
+    GetQueryString(name) {
+      var reg = new RegExp('(^|&)'+ name +'=([^&]*)(&|$)');
+      var r = window.location.search.substr(1).match(reg);
+      if(r!=null)return  unescape(r[2]); return null;
+    },
+    GetUserString () {
+      let code = this.GetQueryString('code')
+      console.log('code ',code);
+      this.axios.post('https://github.com/login/oauth/access_toke',
+        {
+          code: code,
+          client_id: 'ae10725ce19a73189b43',
+          client_secret: '9d80cefff974746c0b9e37da5d765414da85e447',
+        }).then(res => {
+          console.log('res',res);
+        if (res.code === 200) {
+          console.log('dddd');
+        }
+      }).catch(error => {
+        console.error('asd' + error)
+      })
+    },
+    ma () {
+      console.log(this.GetQueryString('code')); 
+    }
+  },
+  created () {
+    this.GetUserString()
   }
 }
 </script>

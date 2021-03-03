@@ -1,7 +1,8 @@
 <template>
   <div class="login">
-    <div class="sim-button button5" @click="authorization">
-      <span>授权</span>
+    <div class="sim-button button5">
+      <a href="https://github.com/login/oauth/authorize?client_id=ae10725ce19a73189b43&redirect_uri=http://localhost:8080/#/home">授权
+      </a>
     </div>
   </div>
 </template>
