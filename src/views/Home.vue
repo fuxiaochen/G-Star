@@ -58,10 +58,12 @@
         <i slot="prefix" class="el-input__icon el-icon-search"></i>
         </el-input>
         <div class="user">
-          <img src="../assets/img/头像.png" alt="头像" class="avatar">
-          <div class="name">name</div>
+          <img :src="user.avatar_url" alt="头像" class="avatar">
+          <div class="name">{{user.name}}</div>
           <div class="user-content">
-          <div class="c-item"><router-link :to="'/system/baseInfo'"><i class="el-icon-tickets"></i> GitHUb</router-link></div>
+          <div class="c-item">
+            <a :href="user.html_url"><i class="el-icon-tickets"></i> GitHUb</a>
+          </div>
           <div class="c-item"><router-link :to="'/system/logMnt'"><i class="el-icon-reading"></i> 关注</router-link></div>
           <div class="c-item"><router-link :to="'/system'"><i class="el-icon-setting"></i> 设置</router-link></div>
           <div class="logout" @click="logoutEvent()"><i class="el-icon-switch-button"></i> 退出</div>
@@ -100,6 +102,7 @@ export default {
   name: 'Home',
   data () {
     return {
+      user:{},
       input1: '',
       input2: ''
     }
@@ -116,22 +119,38 @@ export default {
       var r = window.location.search.substr(1).match(reg);
       if(r!=null)return  unescape(r[2]); return null;
     },
-    GetUserString () {
+    async GetUserString () {
       let code = this.GetQueryString('code')
       console.log('code ',code);
-      this.axios.post('https://github.com/login/oauth/access_toke',
-        {
-          code: code,
-          client_id: 'ae10725ce19a73189b43',
-          client_secret: '9d80cefff974746c0b9e37da5d765414da85e447',
-        }).then(res => {
-          console.log('res',res);
-        if (res.code === 200) {
-          console.log('dddd');
+      const res  = await this.axios({
+          method: 'get',
+          url: '/githubAccessToken', // 获取用户token地址
+          params: {
+            code: code,
+            // state: 'admin',
+            client_id: 'ae10725ce19a73189b43',
+            client_secret: '9d80cefff974746c0b9e37da5d765414da85e447',
+        },
+        headers: {
+          Accept: 'application/json' // 设置headers里的Accept为 application/json ，响应的结果就是json格式的
         }
-      }).catch(error => {
-        console.error('asd' + error)
-      })
+      });
+    const access_token = res.data.access_token;
+    console.log('res.data.access_token',res.data.access_token);
+    const github_user = await this.axios({
+          method: 'get',
+          url: '/githubUserInfo', // 获取用户token地址
+          params: {
+            access_token: access_token
+        },
+        headers: {
+          Accept: 'application/json', // 设置headers里的Accept为 application/json ，响应的结果就是json格式的
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `token ${access_token}`
+        }
+      });
+    this.user = github_user.data
+    console.log('ithub_user',github_user.data);
     },
     ma () {
       console.log(this.GetQueryString('code')); 
