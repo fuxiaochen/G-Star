@@ -10,11 +10,6 @@
 <script>
 export default {
   name: 'Login',
-  methods: {
-    authorization() {
-      this.$router.push('/home')
-    },
-  },
 }
 </script>
 <style lang="scss" scoped>

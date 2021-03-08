@@ -72,12 +72,23 @@
       </div>
       <div class="card">
         <div class="left">
-          <div v-for ="i in 10"  class="box-card" :key="i">
-            <div class="title">{{'标题内容 ' + i }}</div>
-            <span class="text">{{'内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容 ' + i }}</span>
+          <div v-for ="(i, j) in star"  class="box-card" :key="j">
+            <div class="title">{{i.full_name}}</div>
+            <span class="text">{{i.description }}</span>
             <div class="bottom">
-              <div class="left-star">121</div>
-              <div class="left-use">32</div>
+              <div class="left-star">
+                <svg data-v-6ce840f0="" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" 
+                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" 
+                stroke-linejoin="round" class="h-4 stroke-current feather feather-star">
+                <polygon data-v-6ce840f0="" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                </polygon></svg>{{i.watchers }}</div>
+              <div class="left-use">
+                <svg aria-label="fork" class="octicon octicon-repo-forked" viewBox="0 0 16 16" version="1.1" width="14" height="14"
+                 role="img"><path fill-rule="evenodd" d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 
+                 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 
+                 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z">
+                  </path>
+                </svg>{{i.forks }}</div>
             </div>
           </div>
         </div>
@@ -102,6 +113,7 @@ export default {
   name: 'Home',
   data () {
     return {
+      star: [],
       user:{},
       input1: '',
       input2: ''
@@ -119,6 +131,7 @@ export default {
       var r = window.location.search.substr(1).match(reg);
       if(r!=null)return  unescape(r[2]); return null;
     },
+    // 获取用户信息
     async GetUserString () {
       let code = this.GetQueryString('code')
       console.log('code ',code);
@@ -135,22 +148,53 @@ export default {
           Accept: 'application/json' // 设置headers里的Accept为 application/json ，响应的结果就是json格式的
         }
       });
-    const access_token = res.data.access_token;
-    console.log('res.data.access_token',res.data.access_token);
-    const github_user = await this.axios({
-          method: 'get',
-          url: '/githubUserInfo', // 获取用户token地址
-          params: {
-            access_token: access_token
-        },
-        headers: {
-          Accept: 'application/json', // 设置headers里的Accept为 application/json ，响应的结果就是json格式的
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `token ${access_token}`
-        }
-      });
-    this.user = github_user.data
-    console.log('ithub_user',github_user.data);
+      const access_token = res.data.access_token;
+      console.log('res.data.access_token',res.data.access_token);
+      const github_user = await this.axios({
+            method: 'get',
+            url: '/githubUserInfo', // 获取用户token地址
+            params: {
+              access_token: access_token
+          },
+          headers: {
+            Accept: 'application/json', // 设置headers里的Accept为 application/json ，响应的结果就是json格式的
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Authorization: `token ${access_token}`
+          }
+        });
+      this.user = github_user.data
+      const star = await this.axios.get(`https://api.github.com/users/${github_user.data.login}/starred`);
+      this.star = star.data
+      console.log('ithub_user',github_user.data);
+      console.log('star.data',this.star);
+    },
+    // 点击生产md文件
+    checkMd () {
+      let i = 0
+      let _this = this
+      let fn = this.item.full_name
+      let db = this.item.default_branch
+      let md = ['README.md', 'readme.md', 'README.MD', 'Readme.md', 'readme.MD', 'ReadMe.md', 'ReadMe.Md', 'ReadMe.MD', 'README.markdown', 'readme.markdown', 'README', 'readme']
+
+      getMd()
+      function getMd () {
+        let url = 'https://raw.githubusercontent.com/' + fn + '/' + db + '/' + md[i]
+        _this.$http.get(url).then(e => {
+          if (e.status === 200) {
+            _this.mdUrl = url
+            _this.tagShow = true
+            _this.btnLoading = 100
+          }
+        }).catch(() => {
+          i++
+          if (i < md.length) {
+            getMd()
+          } else {
+            _this.$message.error('添加失败，README文件不存在')
+            _this.btnLoading = 100
+          }
+        })
+      }
     },
     ma () {
       console.log(this.GetQueryString('code')); 
