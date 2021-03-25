@@ -7,18 +7,21 @@ import './plugins/element'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 import hljs from 'highlight.js'
+import CollapseTransition from 'element-ui/lib/transitions/collapse-transition'
+
+Vue.component(CollapseTransition.name, CollapseTransition)
 
 Vue.config.productionTip = false
 
 Vue.directive('highlight', function(el) {
-  let blocks = el.querySelectorAll('pre code')
-  blocks.forEach(block => {
-    hljs.highlightBlock(block)
-  })
+    let blocks = el.querySelectorAll('pre code')
+    blocks.forEach(block => {
+        hljs.highlightBlock(block)
+    })
 })
 Vue.use(VueAxios, axios)
 new Vue({
-  router,
-  store,
-  render: h => h(App)
+    router,
+    store,
+    render: h => h(App)
 }).$mount('#app')

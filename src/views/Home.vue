@@ -5,9 +5,10 @@
       <el-row>
         <el-col :span="12" style="width:100%; text-align: left">
           <el-menu
-            default-active="2"
+            default-active="1"
             @open="handleOpen"
             @close="handleClose"
+            style="border-right: none"
             class="el-menu-vertical-demo"
             background-color="#171f2b"
             text-color="#fff"
@@ -89,13 +90,16 @@
           <div v-for="(i, j) in star" class="box-card" :key="j">
             <div class="title" @click="readme(i)">{{i.full_name}}</div>
             <span class="text">{{i.description }}</span>
+            <li
+              class="text-xs text-white bg-brand hover:bg-brand-dark transition-bg rounded-full py-1 px-2 mr-2 mb-2"
+            >{{i.language }}</li>
             <div class="bottom">
               <div class="left-star">
                 <svg
                   data-v-6ce840f0
                   xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
+                  width="12"
+                  height="12"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -117,8 +121,8 @@
                   class="octicon octicon-repo-forked"
                   viewBox="0 0 16 16"
                   version="1.1"
-                  width="14"
-                  height="14"
+                  width="12"
+                  height="12"
                   role="img"
                 >
                   <path
@@ -134,18 +138,74 @@
           </div>
         </div>
         <div class="right">
-          <div class="right-content" v-show="!tagShow">
-            <div class="header">
-              <span>卡片名称</span>
-              <el-button style="float: right; padding: 3px 0" type="text" @click="ma()">操作按钮</el-button>
-            </div>
-            <div class="body">
-              <div v-for="i in 50" :key="i">卡片名称</div>
-            </div>
-          </div>
+          <el-row class="right-content">
+            <el-col class="search">
+              <el-input
+                placeholder="请输入搜索内容"
+                v-model="input">
+                <i class="el-icon-search el-input__icon" slot="suffix" @click="onSearch">
+                </i>
+              </el-input>
+            </el-col>
+            <el-col v-show="!loading">
+              <span style="padding:20px;">搜索结果最多显示前30个，建议精确搜索</span>
+            </el-col>
+            <el-col class="spin" v-show="spinShow">
+              <span tip="Loading"></span>
+            </el-col>
+            <el-col v-show="loading" class="body">
+                <el-table
+                  :data="data"
+                  height="100%"
+                  style="width: 100%"
+                  stripe
+                  :header-cell-style="{fontWeight: 700}">
+                  <el-table-column
+                    prop="full_name"
+                    label="作者/库"
+                    width="200"
+                    >
+                  </el-table-column>
+                  <el-table-column
+                    prop="stargazers_count"
+                    label="Star"
+                    width="120">
+                  </el-table-column>
+                  <el-table-column
+                    prop="watchers_count"
+                    label="Watch"
+                    width="120">
+                  </el-table-column>
+                  <el-table-column
+                    prop="description"
+                    label="描述"
+                    width="640">
+                  </el-table-column>
+                  <el-table-column
+                    label="操作"
+                    width="150">
+                    <template slot-scope="scope">
+                      <el-button @click="checkAdd(scope.row)" type="text"><i class="el-icon-edit" title="添加">添加</i></el-button>
+                      <el-button @click="checkAdd(scope.row)" type="text"><i class="el-icon-edit" title="添加"></i></el-button>
+                    </template>
+                  </el-table-column>
+                </el-table>
+            </el-col>
+            <!-- <el-col>
+              <el-modal title="请选择标签" :visible="tagShow" @ok="handleOk" @cancel="handleCancel">
+                <el-auto-complete
+                  :dataSource="tag"
+                  style="width: 100%"
+                  v-model="selectedItem"
+                  :filterOption="filterOption"
+                  placeholder="input here"
+                />
+              </el-modal>
+            </el-col> -->
+          </el-row>
           <el-row id="md" v-show="tagShow">
             <el-row class="top">
-              <el-button type="primary" @click="ghome">官网</el-button>
+              <el-button type="primary" @click="ghome()">官网</el-button>
               <el-button @click="modify">添加标签</el-button>
             </el-row>
             <el-col class="spin" v-show="spinShow">
@@ -154,17 +214,17 @@
             <el-row class="markdown-body" v-show="!spinShow">
               <div v-html="markdown" v-highlight></div>
             </el-row>
-            <!-- <a-modal
+            <!-- <el-modal
               class="modify"
               title="修改"
               :visible="visible"
               @ok="handleOk"
               @cancel="handleCancel"
             >
-              <a-form>
-                <a-form-item label="作者/库：" :labelCol="{span: 3}" :wrapperCol="{span: 21}">
-                  <a-input v-model="d.repository"></a-input>
-                </a-form-item>
+              <el-form>
+                <el-form-item label="作者/库：" :labelCol="{span: 3}" :wrapperCol="{span: 21}">
+                  <el-input v-model="d.repository"></el-input>
+                </eform-item>
                 <a-form-item label="标签：" :labelCol="{span: 3}" :wrapperCol="{span: 21}">
                   <a-input v-model="d.tag"></a-input>
                 </a-form-item>
@@ -178,11 +238,16 @@
                   <a-textarea v-model="d.description" :rows="4" />
                 </a-form-item>
               </a-form>
-            </a-modal> -->
+            </a-modal>-->
           </el-row>
         </div>
       </div>
     </div>
+    <el-collapse-transition>
+      <div v-show="successLogin" class="transition-box">
+        <div class="el-icon-loading"></div>正在登陆
+      </div>
+    </el-collapse-transition>
   </div>
 </template>
 
@@ -202,18 +267,92 @@ export default {
   name: 'Home',
   data() {
     return {
-      star: [],
-      user: {},
+      star: [], // star内容地址
+      user: {}, //用户信息
       mdUrl: null,
-      tagShow: false,
+      homeUrl: null,
+      tagShow: false, //显示readme内容信息
       markdown: null,
       visible: false,
       spinShow: true,
+      successLogin: true, // 登陆成功信息刷新完成
       input1: '',
       input2: '',
+      input: '',
+      loading: false,
+      btnLoading: 100,
+      data: [],
+      item: null,
+      tag: [],
+      selectedItem: ''
     }
   },
   methods: {
+    //搜索github项目方法
+    onSearch () {
+      if (this.input === '') {
+        this.$message.warning('请输入您要搜索的内容')
+      } else {
+        this.loading = false
+        let q = this.input
+        this.spinShow = true
+        this.$http.get('https://api.github.com/search/repositories?q=' + q).then(res => {
+          this.data = res.data.items
+          if (this.data.length > 0) {
+            this.loading = true
+          } else {
+            this.loading = false
+            this.$message.info('未搜索到相关内容')
+          }
+          this.spinShow = false
+        })
+      }
+    },
+    // 添加到标签或者star
+    checkAdd (id) {
+      console.log('aaa',id);
+    },
+    checkMd () {
+      let i = 0
+      let _this = this
+      let fn = this.item.full_name
+      let db = this.item.default_branch
+      let md = ['README.md', 'readme.md', 'README.MD', 'Readme.md', 'readme.MD', 'ReadMe.md', 'ReadMe.Md', 'ReadMe.MD', 'README.markdown', 'readme.markdown', 'README', 'readme']
+
+      getMd()
+      function getMd () {
+        let url = 'https://raw.githubusercontent.com/' + fn + '/' + db + '/' + md[i]
+        _this.$http.get(url).then(e => {
+          if (e.status === 200) {
+            _this.mdUrl = url
+            _this.tagShow = true
+            _this.btnLoading = 100
+          }
+        }).catch(() => {
+          i++
+          if (i < md.length) {
+            getMd()
+          } else {
+            _this.$message.error('添加失败，README文件不存在')
+            _this.btnLoading = 100
+          }
+        })
+      }
+    },
+    filterOption (input, option) {
+      return option.componentOptions.children[0].text.toUpperCase().indexOf(input.toUpperCase()) >= 0
+    },
+    handleOk () {
+      if (this.selectedItem === '') {
+        this.$message.warning('请选择一个标签，或者输入一个新的标签')
+      } else {
+        this.addDB()
+      }
+      this.tagShow = false
+    },
+    handleCancel () {
+      this.tagShow = false
+    },
     handleOpen(key, keyPath) {
       console.log(key, keyPath)
     },
@@ -221,10 +360,10 @@ export default {
       console.log(key, keyPath)
     },
     modify() {
-      console.log('添加标签');
+      console.log('添加标签')
     },
-    ghome () {
-      console.log('跳转官网');
+    ghome() {
+      window.open(this.homeUrl, '_blank')
     },
     // 点击项目展示 readme.md 内容
     readme(item) {
@@ -245,11 +384,14 @@ export default {
         'README',
         'readme',
       ]
-      let url = 'https://raw.githubusercontent.com/' + fn + '/' + db + '/' + md[i]
-      this.axios.get(url)
+      let url =
+        'https://raw.githubusercontent.com/' + fn + '/' + db + '/' + md[i]
+      this.axios
+        .get(url)
         .then((e) => {
           if (e.status === 200) {
             this.mdUrl = url
+            this.homeUrl = item.clone_url
             this.tagShow = true
             let md = marked(e.data)
             this.markdown = md
@@ -320,6 +462,7 @@ export default {
         `https://api.github.com/users/${github_user.data.login}/starred`
       )
       this.star = star.data
+      this.successLogin = false
       console.log('ithub_user', github_user.data)
       console.log('star.data', this.star)
     },
@@ -328,6 +471,12 @@ export default {
     },
   },
   created() {
+    document.onkeydown = () => {
+				let key = window.event.keyCode;
+				if (key == 13) {
+					this.onSearch();
+				}
+			}
     this.GetUserString()
   },
 }
@@ -445,18 +594,18 @@ export default {
         }
         .title {
           cursor: pointer;
-          color: #72c2f7;
+          color: #3eacf5;
           font-size: 18px;
           padding-bottom: 10px;
           text-align: left;
         }
         .bottom {
           display: flex;
-          padding-top: 10px;
+          padding-top: 8px;
           justify-content: space-between;
           align-items: center;
           .left-star {
-            color: #7effd8;
+            color: #2c2c2c;
           }
         }
       }
@@ -487,13 +636,17 @@ export default {
           border: 1px solid #ebeef5;
           border-radius: 4px;
           box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
-          .header {
-            height: 2%;
+          .search {
+            height: 8%;
             border-bottom: 1px solid #ebeef5;
             padding: 20px;
           }
+          .spin{
+            margin-top: 20px;
+            text-align: center;
+          }
           .body {
-            height: 89%;
+            height: 91%;
             padding: 10px;
             overflow: auto;
           }
@@ -506,7 +659,8 @@ export default {
           overflow-y: scroll;
           width: 100%;
           height: 99.8%;
-          border: 1px solid #ebeef5;border-radius: 4px;
+          border: 1px solid #ebeef5;
+          border-radius: 4px;
           box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
           &::-webkit-scrollbar {
             width: 1px;
@@ -533,7 +687,9 @@ export default {
               max-width: 80%;
             }
           }
-          .markdown-body::-webkit-scrollbar { width: 0 !important }
+          .markdown-body::-webkit-scrollbar {
+            width: 0 !important;
+          }
           #components-back-top-demo-custom .ant-back-top {
             bottom: 100px;
           }
@@ -558,6 +714,22 @@ export default {
         }
       }
     }
+  }
+  .transition-box {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    // background-image: url(../assets/img/bg.jpg);
+    // background-repeat: no-repeat;
+    // background-size: 100% 100%;
+    background-color: #40567a;
+    color: #fff;
+    box-sizing: border-box;
+    margin-right: 20px;
   }
 }
 </style>
