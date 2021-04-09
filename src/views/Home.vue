@@ -310,7 +310,7 @@ export default {
     },
     // 添加到标签或者star
     checkAdd (id) {
-      console.log('aaa',id);
+      console.log('添加标签',id);
     },
     checkMd () {
       let i = 0
