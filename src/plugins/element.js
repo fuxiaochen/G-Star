@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { Row, Col, Menu, MenuItem, MenuItemGroup, Submenu, Card, Input, Button, Collapse, Table, TableColumn } from 'element-ui'
+import { Row, Col, Menu, MenuItem, MenuItemGroup, Submenu, Card, Input, Button, Collapse, Table, TableColumn, Dialog, Form, FormItem, Autocomplete } from 'element-ui'
 Vue.use(Row)
 Vue.use(Col)
 Vue.use(Menu)
@@ -12,3 +12,7 @@ Vue.use(Button)
 Vue.use(Collapse)
 Vue.use(Table)
 Vue.use(TableColumn)
+Vue.use(Dialog)
+Vue.use(Form)
+Vue.use(FormItem)
+Vue.use(Autocomplete)

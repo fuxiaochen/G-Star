@@ -31,9 +31,8 @@
                 <i class="el-icon-price-tag"></i>
                 <span>标签</span>
               </template>
-              <el-menu-item-group>
-                <el-menu-item index="1-1">选项1</el-menu-item>
-                <el-menu-item index="1-2">选项2</el-menu-item>
+              <el-menu-item-group v-for="(i,j) of itemlist" :key="j">
+                <el-menu-item>{{i}}</el-menu-item>
               </el-menu-item-group>
             </el-submenu>
             <el-submenu index="4">
@@ -41,9 +40,8 @@
                 <i class="el-icon-key"></i>
                 <span>语言</span>
               </template>
-              <el-menu-item-group>
-                <el-menu-item index="1-1">选项1</el-menu-item>
-                <el-menu-item index="1-2">选项2</el-menu-item>
+              <el-menu-item-group v-for="(i,j) of languagelist" :key="j">
+                <el-menu-item>{{i}}</el-menu-item>
               </el-menu-item-group>
             </el-submenu>
           </el-menu>
@@ -138,13 +136,10 @@
           </div>
         </div>
         <div class="right">
-          <el-row class="right-content">
+          <el-row class="right-content" v-show="!tagShow">
             <el-col class="search">
-              <el-input
-                placeholder="请输入搜索内容"
-                v-model="input">
-                <i class="el-icon-search el-input__icon" slot="suffix" @click="onSearch">
-                </i>
+              <el-input placeholder="请输入搜索内容" v-model="input">
+                <i class="el-icon-search el-input__icon" slot="suffix" @click="onSearch"></i>
               </el-input>
             </el-col>
             <el-col v-show="!loading">
@@ -154,42 +149,25 @@
               <span tip="Loading"></span>
             </el-col>
             <el-col v-show="loading" class="body">
-                <el-table
-                  :data="data"
-                  height="100%"
-                  style="width: 100%"
-                  stripe
-                  :header-cell-style="{fontWeight: 700}">
-                  <el-table-column
-                    prop="full_name"
-                    label="作者/库"
-                    width="200"
-                    >
-                  </el-table-column>
-                  <el-table-column
-                    prop="stargazers_count"
-                    label="Star"
-                    width="120">
-                  </el-table-column>
-                  <el-table-column
-                    prop="watchers_count"
-                    label="Watch"
-                    width="120">
-                  </el-table-column>
-                  <el-table-column
-                    prop="description"
-                    label="描述"
-                    width="640">
-                  </el-table-column>
-                  <el-table-column
-                    label="操作"
-                    width="150">
-                    <template slot-scope="scope">
-                      <el-button @click="checkAdd(scope.row)" type="text"><i class="el-icon-edit" title="添加">添加</i></el-button>
-                      <el-button @click="checkAdd(scope.row)" type="text"><i class="el-icon-edit" title="添加"></i></el-button>
-                    </template>
-                  </el-table-column>
-                </el-table>
+              <el-table
+                :data="data"
+                height="100%"
+                style="width: 100%"
+                stripe
+                :header-cell-style="{fontWeight: 700}"
+              >
+                <el-table-column prop="full_name" label="作者/库" width="200"></el-table-column>
+                <el-table-column prop="stargazers_count" label="Star" width="120"></el-table-column>
+                <el-table-column prop="watchers_count" label="Watch" width="120"></el-table-column>
+                <el-table-column prop="description" label="描述" width="640"></el-table-column>
+                <el-table-column label="操作" width="150">
+                  <template slot-scope="scope">
+                    <el-button @click="checkAdd(scope.row)" type="text">
+                      <i class="el-icon-mouse" title="添加">添加标签</i>
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
             </el-col>
             <!-- <el-col>
               <el-modal title="请选择标签" :visible="tagShow" @ok="handleOk" @cancel="handleCancel">
@@ -201,13 +179,31 @@
                   placeholder="input here"
                 />
               </el-modal>
-            </el-col> -->
+            </el-col>-->
           </el-row>
           <el-row id="md" v-show="tagShow">
             <el-row class="top">
               <el-button type="primary" @click="ghome()">官网</el-button>
               <el-button @click="modify">添加标签</el-button>
             </el-row>
+            <el-dialog title="添加标签" :visible.sync="expressionShow" >
+              <el-row class="demo-autocomplete">
+                <el-col :span="26" style="width:80%">
+                  <el-autocomplete
+                    class="inline-input"
+                    v-model="state1"
+                    :fetch-suggestions="querySearch"
+                    placeholder="请选择标签或新建标签"
+                    @select="handleSelect"
+                  ></el-autocomplete>
+                </el-col>
+              </el-row>
+              <div slot="footer" class="dialog-footer">
+                <el-button @click="expressionShow = false">取 消</el-button>
+                <el-button type="primary" @click="addexpression">确 定</el-button>
+              </div>
+            </el-dialog>
+
             <el-col class="spin" v-show="spinShow">
               <span tip="Loading"></span>
             </el-col>
@@ -243,11 +239,6 @@
         </div>
       </div>
     </div>
-    <el-collapse-transition>
-      <div v-show="successLogin" class="transition-box">
-        <div class="el-icon-loading"></div>正在登陆
-      </div>
-    </el-collapse-transition>
   </div>
 </template>
 
@@ -271,11 +262,13 @@ export default {
       user: {}, //用户信息
       mdUrl: null,
       homeUrl: null,
+      state1: '',
+      formLabelWidth: '120px',
       tagShow: false, //显示readme内容信息
+      expressionShow: false, //显示readme内容信息
       markdown: null,
       visible: false,
       spinShow: true,
-      successLogin: true, // 登陆成功信息刷新完成
       input1: '',
       input2: '',
       input: '',
@@ -284,65 +277,131 @@ export default {
       data: [],
       item: null,
       tag: [],
-      selectedItem: ''
+      itemlist: ['标签1', '标签2', '标签3'],
+      languagelist: ['vue', 'C++', 'java'],
+      selectedItem: '',
+      form: {
+        name: '',
+        region: '',
+        date1: '',
+        date2: '',
+        delivery: false,
+        type: [],
+        resource: '',
+        desc: '',
+      },
     }
   },
   methods: {
     //搜索github项目方法
-    onSearch () {
+    onSearch() {
       if (this.input === '') {
         this.$message.warning('请输入您要搜索的内容')
       } else {
         this.loading = false
         let q = this.input
         this.spinShow = true
-        this.$http.get('https://api.github.com/search/repositories?q=' + q).then(res => {
-          this.data = res.data.items
-          if (this.data.length > 0) {
-            this.loading = true
-          } else {
-            this.loading = false
-            this.$message.info('未搜索到相关内容')
-          }
-          this.spinShow = false
-        })
+        this.$http
+          .get('https://api.github.com/search/repositories?q=' + q)
+          .then((res) => {
+            this.data = res.data.items
+            if (this.data.length > 0) {
+              this.loading = true
+            } else {
+              this.loading = false
+              this.$message.info('未搜索到相关内容')
+            }
+            this.spinShow = false
+          })
       }
     },
-    // 添加到标签或者star
-    checkAdd (id) {
-      console.log('添加标签',id);
+    querySearch(queryString, cb) {
+      var restaurants = this.restaurants
+      var results = queryString
+        ? restaurants.filter(this.createFilter(queryString))
+        : restaurants
+      // 调用 callback 返回建议列表的数据
+      cb(results)
     },
-    checkMd () {
+
+    handleSelect(item) {
+      console.log(item)
+    },
+    createFilter(queryString) {
+        return (restaurant) => {
+          return (restaurant.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0);
+        };
+      },
+    loadAll() {
+      return [
+        { value: '三全鲜食（北新泾店）', address: '长宁区新渔路144号' },
+        {
+          value: 'Hot honey 首尔炸鸡（仙霞路）',
+          address: '上海市长宁区淞虹路661号',
+        },
+        {
+          value: '新旺角茶餐厅',
+          address: '上海市普陀区真北路988号创邑金沙谷6号楼113',
+        },
+      ]
+    },
+    // 添加到标签或者star
+    checkAdd(id) {
+      this.expressionShow = !this.expressionShow
+      localStorage.setItem('id', id)
+    },
+    checkMd() {
       let i = 0
       let _this = this
       let fn = this.item.full_name
       let db = this.item.default_branch
-      let md = ['README.md', 'readme.md', 'README.MD', 'Readme.md', 'readme.MD', 'ReadMe.md', 'ReadMe.Md', 'ReadMe.MD', 'README.markdown', 'readme.markdown', 'README', 'readme']
+      let md = [
+        'README.md',
+        'readme.md',
+        'README.MD',
+        'Readme.md',
+        'readme.MD',
+        'ReadMe.md',
+        'ReadMe.Md',
+        'ReadMe.MD',
+        'README.markdown',
+        'readme.markdown',
+        'README',
+        'readme',
+      ]
 
       getMd()
-      function getMd () {
-        let url = 'https://raw.githubusercontent.com/' + fn + '/' + db + '/' + md[i]
-        _this.$http.get(url).then(e => {
-          if (e.status === 200) {
-            _this.mdUrl = url
-            _this.tagShow = true
-            _this.btnLoading = 100
-          }
-        }).catch(() => {
-          i++
-          if (i < md.length) {
-            getMd()
-          } else {
-            _this.$message.error('添加失败，README文件不存在')
-            _this.btnLoading = 100
-          }
-        })
+      function getMd() {
+        let url =
+          'https://raw.githubusercontent.com/' + fn + '/' + db + '/' + md[i]
+        _this.$http
+          .get(url)
+          .then((e) => {
+            if (e.status === 200) {
+              _this.mdUrl = url
+              _this.tagShow = !_this.tagShow
+              _this.btnLoading = 100
+            }
+          })
+          .catch(() => {
+            i++
+            if (i < md.length) {
+              getMd()
+            } else {
+              _this.$message.error('添加失败，README文件不存在')
+              _this.btnLoading = 100
+            }
+          })
       }
     },
-    filterOption (input, option) {
-      return option.componentOptions.children[0].text.toUpperCase().indexOf(input.toUpperCase()) >= 0
+    filterOption(input, option) {
+      return (
+        option.componentOptions.children[0].text
+          .toUpperCase()
+          .indexOf(input.toUpperCase()) >= 0
+      )
     },
-    handleOk () {
+    handleOk() {
       if (this.selectedItem === '') {
         this.$message.warning('请选择一个标签，或者输入一个新的标签')
       } else {
@@ -350,7 +409,7 @@ export default {
       }
       this.tagShow = false
     },
-    handleCancel () {
+    handleCancel() {
       this.tagShow = false
     },
     handleOpen(key, keyPath) {
@@ -360,7 +419,13 @@ export default {
       console.log(key, keyPath)
     },
     modify() {
-      console.log('添加标签')
+      this.expressionShow = !this.expressionShow
+      console.log('添加标签1', this.state1)
+    },
+    addexpression() {
+      if(this.state1 == '') {
+        this.$message.warning('请选择一个标签，或者输入一个新的标签')
+      }
     },
     ghome() {
       window.open(this.homeUrl, '_blank')
@@ -444,7 +509,6 @@ export default {
         },
       })
       const access_token = res.data.access_token
-      console.log('res.data.access_token', res.data.access_token)
       const github_user = await this.axios({
         method: 'get',
         url: '/githubUserInfo', // 获取用户token地址
@@ -458,11 +522,12 @@ export default {
         },
       })
       this.user = github_user.data
+      localStorage.setItem('user', this.user)
       const star = await this.axios.get(
         `https://api.github.com/users/${github_user.data.login}/starred`
       )
       this.star = star.data
-      this.successLogin = false
+      localStorage.setItem('star', this.star)
       console.log('ithub_user', github_user.data)
       console.log('star.data', this.star)
     },
@@ -471,13 +536,20 @@ export default {
     },
   },
   created() {
+    this.restaurants = this.loadAll();
     document.onkeydown = () => {
-				let key = window.event.keyCode;
-				if (key == 13) {
-					this.onSearch();
-				}
-			}
-    this.GetUserString()
+      let key = window.event.keyCode
+      if (key == 13) {
+        this.onSearch()
+      }
+    }
+    if (localStorage.getItem('star')) {
+      this.star = localStorage.getItem('star')
+      this.user = localStorage.getItem('user')
+      console.log('2w', this.star,this.user );
+    }else{
+      this.GetUserString()
+    }
   },
 }
 </script>
@@ -544,6 +616,7 @@ export default {
           box-sizing: border-box;
           min-width: 120px;
           box-shadow: 0px 0px 8px 0px #5f86d4;
+          z-index: 99;
           div {
             padding: 10px 0 0;
             cursor: pointer;
@@ -641,7 +714,7 @@ export default {
             border-bottom: 1px solid #ebeef5;
             padding: 20px;
           }
-          .spin{
+          .spin {
             margin-top: 20px;
             text-align: center;
           }
@@ -714,22 +787,6 @@ export default {
         }
       }
     }
-  }
-  .transition-box {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    // background-image: url(../assets/img/bg.jpg);
-    // background-repeat: no-repeat;
-    // background-size: 100% 100%;
-    background-color: #40567a;
-    color: #fff;
-    box-sizing: border-box;
-    margin-right: 20px;
   }
 }
 </style>
